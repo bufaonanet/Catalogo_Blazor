@@ -1,0 +1,23 @@
+﻿<div id="modalConfirma" class="modal fade" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <dvi class="modal-header">
+                <h5 class="modal-title">@Titulo</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </dvi>
+            <div class="modal-body">
+                @ChildContent
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" @onclick="onConfirma" data-bs-dismiss="modal">Ok </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {   
+    [Parameter] public string Titulo { get; set; } = "Confirma Exclusão ?";
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public EventCallback onConfirma { get; set; }
+}

@@ -1,0 +1,143 @@
+﻿@page "/categoria"
+@inject HttpClient http
+
+<AuthorizeView>
+    <Authorized>
+        <h2>Categorias</h2>
+
+        <div class="row mb-3">
+            <div class="col-sm-3">
+                <a class="btn btn-success" href="/categoria/create">Nova Categoria</a>
+            </div>
+        </div>
+
+        <form class="row gx-3 gy-2 align-items-center">
+            <div class="col-sm-3">
+                <label class="visually-hidden" for="filtro">Filtro</label>
+                <input @bind="nomeFiltro" type="text" class="form-control" id="filtro" placeholder="Filtrar pelo nome">
+            </div>
+            <div class="col-sm-3">
+                <button @onclick="Filtrar" type="button" class="btn btn-primary">Filtrar</button>
+                <button @onclick="LimparFiltro" type="button" class="btn btn-danger">Limpar</button>
+            </div>
+        </form>
+
+        <br />
+
+        @if (categorias is null)
+        {
+            <p><em>Carregando...</em></p>
+        }
+        else if (categorias.Count == 0)
+        {
+            <p><em>Não existem categorias cadastradas...</em></p>
+        }
+        else
+        {
+            <table class="table mt-3">
+                <thead>
+                    <tr>
+                        <td>Categoria</td>
+                        <td>Descricao</td>
+                        <td>Edita</td>
+                        <td>Deleta</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var categoria in categorias)
+                    {
+                        <tr>
+                            <td>@categoria.Nome</td>
+                            <td>@categoria.Descricao</td>
+                            <td>
+                                <a class="btn btn-primary" href="categoria/edit/@categoria.CategoriaId">Editar</a>
+                            </td>
+                            <td>
+                                <a class="btn btn-danger" @onclick="@(()=>ConfirmaDelecao(categoria.CategoriaId))" data-bs-toggle="modal" data-bs-target="#modalConfirma">Deletar</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        <Confirma @ref="confirma" onConfirma="@(()=> DeletarCategoria(codigoCategoriaDelecao))">
+            <div>Deseja realmente excluir este item</div>
+        </Confirma>
+        <hr />
+        <Paginacao QuantidadeTotalPaginas="quantidadeTotalPaginas"
+                   PaginaAtual="paginaAtual"
+                   Raio="2"
+                   PaginaSelecionada="PaginaSelecionada">
+        </Paginacao>
+    </Authorized>
+    <NotAuthorized>
+        <h2>Usuário não autorizado...</h2>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    List<Categoria> categorias { get; set; }
+
+    int codigoCategoriaDelecao;
+    int quantidadeTotalPaginas;
+    int paginaAtual = 1;
+
+    string nomeFiltro = string.Empty;
+
+
+    Confirma confirma;
+
+    private async Task Filtrar()
+    {
+        paginaAtual = 1;
+        await CarregaCategorias();
+    }
+
+    private async Task LimparFiltro()
+    {
+        nomeFiltro = string.Empty;
+        paginaAtual = 1;
+        await CarregaCategorias();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregaCategorias();
+    }
+
+    private async Task PaginaSelecionada(int pagina)
+    {
+        paginaAtual = pagina;
+        await CarregaCategorias(pagina);
+    }
+
+    public async Task CarregaCategorias(int pagina = 1, int quantidadePorPagina = 5)
+    {
+        var httpResponse = await http
+            .GetAsync($"api/categoria?pagina={pagina}&quantidadePorPagina={quantidadePorPagina}&nome={nomeFiltro}");
+
+        if (httpResponse.IsSuccessStatusCode)
+        {
+            quantidadeTotalPaginas = int.Parse(httpResponse.Headers.GetValues("totalPaginas").FirstOrDefault());
+
+            var responseString = await httpResponse.Content.ReadAsStringAsync();
+
+            categorias = JsonSerializer.Deserialize<List<Categoria>>(responseString,
+                new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+        }
+    }
+
+    public void ConfirmaDelecao(int categoriaId)
+    {
+        codigoCategoriaDelecao = categoriaId;
+    }
+
+    public async Task DeletarCategoria(int categoriaId)
+    {
+        await http.DeleteAsync($"api/categoria/{categoriaId}");
+        await CarregaCategorias();
+    }
+}

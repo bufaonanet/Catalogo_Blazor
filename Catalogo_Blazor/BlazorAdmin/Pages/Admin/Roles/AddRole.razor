@@ -1,0 +1,64 @@
+﻿@page "/addrole"
+
+@inject NavigationManager navigationManager
+@inject IRoleService roleService
+
+<h2>Cria um no perfil</h2>
+
+<hr />
+
+<Alerta Exibir="exibirAlerta">
+    <h3>@mensagem</h3>
+</Alerta>
+
+<EditForm Model="@role" OnValidSubmit="@ValidSubmit">
+    <DataAnnotationsValidator />
+    <div class="row">
+        <div class="col-md-8">
+            <div class="form-group">
+                <label for="Name" class="control-label">Nome</label>
+                <input for="Name" class="form-control" @bind="@role.Name" placeholder="Informe o nome do Perfil" />
+                <ValidationMessage For="@(() => role.Name)" />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <button class="btn btn-primary" type="submit">Salvar</button>
+                <input type="button" class="btn" @onclick="@Cancel" value="Cancela" />
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+
+@code {
+
+    Role role = new();
+
+    string mensagem = "";
+    bool exibirAlerta = false;
+
+    private async void ValidSubmit()
+    {
+        bool resultado = await roleService.CreateRole(role);
+        if (!resultado)
+        {
+            exibirAlerta = true;
+            mensagem = $"Já existe Role cadastrado com este Nome";
+        }
+        else
+        {
+            navigationManager.NavigateTo("roles");
+        }
+        StateHasChanged();
+    }
+
+    private void Cancel()
+    {
+        navigationManager.NavigateTo("roles");
+    }
+
+}

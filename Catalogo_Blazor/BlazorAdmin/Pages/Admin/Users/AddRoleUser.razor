@@ -1,0 +1,128 @@
+﻿@page "/addroleuser/{id:guid}"
+
+@inject NavigationManager navigationManager
+@inject IRoleService roleService
+@inject IUserService userService
+@inject IWebHostEnvironment env
+
+<h2>Atribui Perfil ao usuário</h2>
+<br />
+
+<Alerta Exibir="exibirAlerta">
+    <h3>@mensagem</h3>
+</Alerta>
+
+<form>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="form-group">
+                <label class="control-label">Id</label>
+                <input class="form-control" @bind="@user.Id" disabled />
+            </div>
+            <div class="form-group">
+                <label class="control-label">Nome</label>
+                <input class="form-control" @bind="@user.UserName" disabled />
+            </div>
+            <div class="form-group">
+                <label class="control-label">Email</label>
+                <input class="form-control" @bind="@user.Email" disabled />
+            </div>
+            <div class="form-group">
+                <label form="categoria">Roles: </label>
+                <select @onchange="RoleSelectionChanged" class="form-control">
+                    @if (roles != null)
+                    {
+                        @foreach (var role in roles)
+                        {
+                            <option value="@role.Id">
+                                @role.Name
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group">
+            <input type="button" class="btn btn-primary" @onclick="@UpdateRole" value="Atribui Perfil ao Usuário" />
+            <input type="button" class="btn" @onclick="@Cancel" value="Cancelar" />
+        </div>
+    </div>
+</form>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    User user = new();
+    List<Role> roles;
+
+    string mensagem = "";
+    bool exibirAlerta = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            user = await userService.GetUser(Id);
+            await LoagRoles();
+        }
+        catch (Exception ex)
+        {
+            exibirAlerta = true;
+            if (env.IsDevelopment())
+            {
+                mensagem = "Erro ao acessar os dados... \n" + ex.StackTrace.ToString();
+            }
+            else
+            {
+                mensagem = "Nâo foi possível acessar os dados dos perfiles de usuários" + ex.InnerException;
+            }
+        }
+    }
+
+    async Task LoagRoles()
+    {
+        roles = await roleService.GetRoles();
+        user.RoleId = roles[0].Id;
+    }
+
+    async Task UpdateRole()
+    {
+        try
+        {
+            await userService.UpdateUserRole(Id, user);      
+            exibirAlerta = true;
+            mensagem = $"O Perfil foi Atrivuido ao usuário: {user.UserName} com sucesso";
+            //navigationManager.NavigateTo("users");
+        }
+        catch (Exception ex)
+        {
+            exibirAlerta = true;
+            if (env.IsDevelopment())
+            {
+                mensagem = "Erro ao acessar os dados... \n" + ex.StackTrace.ToString();
+            }
+            else
+            {
+                mensagem = "Nâo foi possível acessar os dados dos perfiles de usuários" + ex.InnerException;
+            }
+        }
+    }
+
+    void Cancel()
+    {
+        navigationManager.NavigateTo("users");
+    }
+
+    void RoleSelectionChanged(ChangeEventArgs e)
+    {
+        if (Guid.TryParse(e.Value.ToString(), out Guid id))
+        {
+            user.RoleId = id;
+        }
+    }
+
+
+}

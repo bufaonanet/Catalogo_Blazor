@@ -1,0 +1,78 @@
+﻿@page "/listuserroles"
+
+@inject IUserService userService
+@inject IRoleService roleService
+@inject IWebHostEnvironment Env
+
+<h3>Perfis atribuídos ao usuário</h3>
+
+<div class="form-group">
+    <select @onchange="UserSelectionChanged" class="form-control">
+        @if (users != null)
+        {
+            @foreach (var user in users)
+            {
+                <option value="@user.Id">
+                    @user.UserName
+                </option>
+            }
+        }
+    </select>
+</div>
+
+@if (roles == null)
+{
+    <p><em>Carregando...</em></p>
+}
+else if (roles.Count == 0)
+{
+    <p><em>Não existem roles cadastrados...</em></p>
+}
+else
+{
+    <div class="row">
+        @foreach (var role in roles)
+        {
+            <div class="col-sm-2 col-lg-2 col-md-2">
+                <div class="card" style="border: none">
+                    <img src="/images/roleuser.jpg" class="img-rounded" alt="@role.Name" width="100" height="100" />
+                    <div class="card-body">
+                        <h5 class="pull-right">@role.Name</h5>
+                        <h5 class="card-title">@role.NormalizedName</h5>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+
+@code {
+
+    List<Role> roles { get; set; }
+    List<User> users { get; set; }
+    private Guid codigoUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await userService.GetUsers();
+        codigoUser = users[0].Id;
+        await LoadRolesUsers();
+    }
+
+    async Task LoadRolesUsers()
+    {
+        roles = await roleService.GetRolesUser(codigoUser);
+        StateHasChanged();
+    }
+
+    async void UserSelectionChanged(ChangeEventArgs e)
+    {
+        if (Guid.TryParse(e.Value.ToString(), out Guid id))
+        {
+            codigoUser = id;
+            await LoadRolesUsers();
+        }
+    }
+
+}

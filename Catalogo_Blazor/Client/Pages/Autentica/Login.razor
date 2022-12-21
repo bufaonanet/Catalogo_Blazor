@@ -1,0 +1,70 @@
+﻿@page "/login"
+
+@inject HttpClient http
+@inject NavigationManager navigation
+@inject TokenAuthenticationStateProvider authStateProvider
+
+<Aviso Exibir=loginFalhou>
+    <h5>@Mensagem</h5>
+</Aviso>
+
+<div class="container col-6">
+    <div class="card-body">
+        <h5 class="card-text">Login</h5>
+        <EditForm Model="userInfo" OnValidSubmit="FazerLogin">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <InputText class="form-control" @bind-Value="userInfo.Email" />
+                <ValidationMessage For="@(()=> userInfo.Email)" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <InputText type="password" class="form-control" @bind-Value="userInfo.Password" />
+                <ValidationMessage For="@(()=> userInfo.Password)" />
+            </div>
+            <button type="submit" class="btn btn-outline-primary btn-sm">Login</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    UserInfo userInfo = new();
+    bool loginFalhou = false;
+    string Mensagem = string.Empty;
+
+    async Task FazerLogin()
+    {
+        try
+        {
+            //var result = http.PostAsJsonAsync<UserToken>("api/account/login", userInfo);
+            var loginAsJson = JsonSerializer.Serialize(userInfo);
+
+            var httpResponse = await http.PostAsync("api/account/login",
+                new StringContent(loginAsJson, Encoding.UTF8, "application/json"));
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                var responseString = await httpResponse.Content.ReadAsStringAsync();
+
+                var loginResult = JsonSerializer.Deserialize<UserToken>(responseString,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                await authStateProvider.Login(loginResult.Token);
+
+                navigation.NavigateTo("/");
+            }
+            else
+            {
+                loginFalhou = true;
+                Mensagem = $"Não foi possível realizar o Login do usuário (Erro: {httpResponse.StatusCode})";
+            }
+        }
+        catch (Exception)
+        {
+            loginFalhou = true;
+            Mensagem = $"Não foi possível realizar o Login do Usuário...";
+        }
+    }
+}

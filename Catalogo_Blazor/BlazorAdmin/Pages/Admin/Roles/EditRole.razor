@@ -1,0 +1,108 @@
+﻿@page "/editrole/{id:guid}"
+
+@inject NavigationManager navigationManager
+@inject IRoleService roleService
+@inject IWebHostEnvironment env
+
+<h2>Editar Perfil</h2>
+
+<Alerta Exibir="exibirAlerta">
+    <h3>@mensagem</h3>
+</Alerta>
+
+<form>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="form-group">
+                <label class="control-label">Nome</label>
+                <input class="form-control" @bind="@role.Name" />
+            </div>
+            <div class="form-group">
+                <label class="control-label">Normalizado</label>
+                <input class="form-control" @bind="@role.NormalizedName" disabled />
+            </div>
+            <div class="form-group">
+                <label class="control-label">ConcurrencyStamp</label>
+                <input class="form-control" @bind="@role.ConcurrencyStamp" disabled />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group">
+            <input type="button" class="btn btn-primary" @onclick="@UpdateRole" value="Atualizar" />
+            <input type="button" class="btn" @onclick="@Cancel" value="Cancelar" />
+        </div>
+    </div>
+</form>
+
+
+
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    Role role = new();
+
+    string mensagem = "";
+    bool exibirAlerta = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            role = await roleService.GetRole(Id);
+        }
+        catch (Exception ex)
+        {
+
+            exibirAlerta = true;
+            if (env.IsDevelopment())
+            {
+                mensagem = "Erro ao acessar os dados ...\n" + ex.StackTrace.ToString();
+            }
+            else
+            {
+                mensagem = "Não foi possível ao acessar os dados do perfil do usuário ...";
+            }
+            StateHasChanged();
+        }
+    }
+
+    private void Cancel()
+    {
+        navigationManager.NavigateTo("roles");
+    }
+
+    private async void UpdateRole()
+    {
+        try
+        {
+            bool resultado = await roleService.EditRole(Id, role);
+            if (!resultado)
+            {
+                exibirAlerta = true;
+                mensagem = "Já existe Role cadastrado com este Nome";
+                StateHasChanged();
+            }
+            else
+            {
+                navigationManager.NavigateTo("roles");
+            }
+        }
+        catch (Exception ex)
+        {
+            exibirAlerta = true;
+            if (env.IsDevelopment())
+            {
+                mensagem = "Erro ao atualizar os dados ...\n" + ex.StackTrace.ToString();
+            }
+            else
+            {
+                mensagem = "Não foi possível ao editar os dados dos perfis do usuário ...";
+            }
+            StateHasChanged();
+        }
+    }
+
+}

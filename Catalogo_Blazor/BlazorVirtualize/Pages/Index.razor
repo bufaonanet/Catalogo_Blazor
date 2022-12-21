@@ -1,0 +1,31 @@
+﻿@page "/"
+
+@inject IJSRuntime jsRuntime
+
+<h3>Bufaonanet</h3>
+<hr />
+<p>
+    <b> Virtualize : ItemsProvider (Lazy Loading)</b>
+</p>
+
+<h3>Usando Isolamento JS</h3>
+
+Qual o seu nome :
+<input @bind="nome" />
+
+<button @onclick="Submit">Ver Saudação</button>
+
+@code {
+    private string nome;
+    private IJSObjectReference module;
+
+    protected override async void OnInitialized()
+    {
+        module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/saudacoesJS.js");
+    }
+
+    async Task Submit()
+    {
+        await module.InvokeVoidAsync("saudacoes", nome);
+    }
+}

@@ -1,0 +1,61 @@
+﻿@page "/produtos2"
+
+<h3>Produtos</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Nome</th>
+            <th>Preco</th>
+        </tr>
+    </thead>
+    <tbody>
+        <Virtualize ItemsProvider="CarregaProdutos" Context="produto"
+                    ItemSize="15" OverscanCount="5">
+            <ItemContent>
+                <tr>
+                    <td>@produto.Id</td>
+                    <td>@produto.Nome</td>
+                    <td>@produto.Preco</td>
+                </tr>
+            </ItemContent>
+            <Placeholder>
+                <p>Carregando muitos produtos...</p>
+            </Placeholder>
+        </Virtualize>
+    </tbody>
+</table>
+
+
+@code {
+    private List<Produto> produtos;
+
+    private async Task<List<Produto>> GerandoProdutos()
+    {
+        List<Produto> listaProdutos = new List<Produto>();
+
+        for (int i = 0; i < 15000; i++)
+        {
+            var produto = new Produto()
+                {
+                    Id = Guid.NewGuid(),
+                    Nome = $"Produto {i}",
+                    Preco = i * 100
+                };
+
+            listaProdutos.Add(produto);
+        }
+        return await Task.FromResult(listaProdutos);
+    }
+
+    private async ValueTask<ItemsProviderResult<Produto>> 
+        CarregaProdutos(ItemsProviderRequest request)
+    {
+        var produtos = await GerandoProdutos();
+
+        return new ItemsProviderResult<Produto>
+           (produtos.Skip(request.StartIndex).Take(request.Count), produtos.Count());
+    }
+
+}

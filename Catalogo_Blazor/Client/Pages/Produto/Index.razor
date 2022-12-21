@@ -1,0 +1,89 @@
+﻿@page "/produto"
+@inject HttpClient http
+@attribute [Authorize]
+
+@if (Produtos is null)
+{
+    <p><em>Carregando...</em></p>
+}
+else if (Produtos.Count == 0)
+{
+    <p><em>Não existem produtos cadastradas...</em></p>
+}
+else
+{
+    <AuthorizeView Roles="Admin">
+        <Authorized>
+            <div class="row mb-3">
+                <div class="col-sm-3">
+                    <a class="btn btn-success" href="/produto/create">Novo Produto</a>
+                </div>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <h2>Somente Usuário Admin pode cadastrar produtos!!!</h2>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <td>Produto</td>
+                <td>Descricao</td>
+                <td>Preço</td>
+                <td>Edita</td>
+                <td>Deleta</td>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var produto in Produtos)
+            {
+                <tr>
+                    <td>@produto.Nome</td>
+                    <td>@produto.Descricao</td>
+                    <td>@produto.Preco</td>
+                    <td>
+                        <a class="btn btn-primary" href="produto/edit/@produto.ProdutoId">Editar</a>
+                    </td>
+                    <td>
+                        <a class="btn btn-danger" @onclick="@(()=>ConfirmaDelecao(produto.ProdutoId))" data-bs-toggle="modal" data-bs-target="#modalConfirma">Deletar</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<Confirma @ref="confirma" onConfirma="@(()=> DeletarProduto(codigoProdutoDelecao))">
+    <div>Deseja realmente excluir este item</div>
+</Confirma>
+
+@code {
+
+    List<Produto> Produtos { get; set; }
+
+    int codigoProdutoDelecao;
+
+    Confirma confirma;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarProdutos();
+    }
+
+    async Task CarregarProdutos()
+    {
+        Produtos = await http.GetFromJsonAsync<List<Produto>>("/api/produto");
+    }
+
+    void ConfirmaDelecao(int produtoId)
+    {
+        codigoProdutoDelecao = produtoId;
+    }
+
+    public async Task DeletarProduto(int produtoId)
+    {
+        await http.DeleteAsync($"api/produto/{produtoId}");
+        await CarregarProdutos();
+    }
+}

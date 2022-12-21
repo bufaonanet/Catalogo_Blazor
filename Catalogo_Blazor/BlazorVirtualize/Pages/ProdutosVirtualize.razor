@@ -1,0 +1,57 @@
+﻿@page "/produtos"
+
+<h3>Produtos</h3>
+
+@if (produtos == null)
+{
+    <p><em>Carregando produtos...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nome</th>
+                <th>Preco</th>
+            </tr>
+        </thead>
+        <tbody>
+            <Virtualize Items="produtos" Context="produto" ItemSize="15">
+                <tr>
+                    <td>@produto.Id</td>
+                    <td>@produto.Nome</td>
+                    <td>@produto.Preco</td>
+                </tr>
+            </Virtualize>
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Produto> produtos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        produtos = await GerandoProdutos();
+    }
+
+    private async Task<List<Produto>> GerandoProdutos()
+    {
+        List<Produto> listaProdutos = new List<Produto>();
+
+        for (int i = 0; i < 15000; i++)
+        {
+            var produto = new Produto()
+                {
+                    Id = Guid.NewGuid(),
+                    Nome = $"Produto {i}",
+                    Preco = i * 100
+                };
+
+            listaProdutos.Add(produto);
+        }
+        return await Task.FromResult(listaProdutos);
+    }
+
+}

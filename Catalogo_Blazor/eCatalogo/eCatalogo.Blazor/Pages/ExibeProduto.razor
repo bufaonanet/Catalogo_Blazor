@@ -1,0 +1,34 @@
+﻿@page "/produto/{id:int}"
+
+@inject IExibeProduto exibeProduto
+
+<h3>Produto - Detalhes</h3>
+
+<div class="card" style="width: 38rem;">
+    <div class="card-body">
+        <img src="@produto.ImagemUrl" />
+        <h5 class="card-title">@produto.Nome</h5>
+        <h6 class="card-subtitle mb-2 text-muted">@produto.Categoria</h6>
+        <hr />
+        <p>
+            Preço: <label style="color:darkred">@produto.Preco.ToString("c")</label>
+        </p>
+        <p class="card-text">@produto.Descricao</p>
+    </div>
+</div>
+<br />
+<NavLink href="produtos">Retornar</NavLink>
+
+
+@code {
+    private Produto produto;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Id > 0)
+            produto = exibeProduto.Execute(Id);
+    }
+}

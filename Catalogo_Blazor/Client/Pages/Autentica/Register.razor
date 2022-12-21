@@ -1,0 +1,60 @@
+﻿@page "/register"
+
+@inject HttpClient http
+@inject NavigationManager navigation
+@inject TokenAuthenticationStateProvider authStateProvider
+
+<h2>Registrar Novo Usuário</h2>
+
+<Aviso Exibir=registrarFalhou>
+    <h5>@Mensagem</h5>
+</Aviso>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Informe as credencias do novo Usuário</h5>
+        <EditForm Model="userInfo" OnValidSubmit="RegistrarUsuario">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <InputText class="form-control" @bind-Value="userInfo.Email" />
+                <ValidationMessage For="@(()=> userInfo.Email)" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <InputText type="password" class="form-control" @bind-Value="userInfo.Password" />
+                <ValidationMessage For="@(()=> userInfo.Password)" />
+            </div>
+            <button type="submit" class="btn btn-outline-primary btn-sm">Registrar Usuário</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    UserInfo userInfo = new();
+    string Mensagem = string.Empty;
+    bool registrarFalhou = false;
+
+    async Task RegistrarUsuario()
+    {
+        try
+        {
+            var loginAsJson = JsonSerializer.Serialize(userInfo);
+
+            var httpResponse = await http.PostAsync("api/account/register",
+                new StringContent(loginAsJson, Encoding.UTF8, "application/json"));
+
+            if (httpResponse.IsSuccessStatusCode)
+                navigation.NavigateTo("/");
+            else
+                Mensagem = $"Não foi possível registra o usuário (Erro: {httpResponse.StatusCode})";
+
+        }
+        catch (Exception)
+        {
+            registrarFalhou = true;
+            Mensagem = $"Não foi possível realizar o registro do Usuário...";
+        }
+    }
+}

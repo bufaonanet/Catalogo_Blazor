@@ -1,0 +1,97 @@
+﻿@page "/deleterole/{id:guid}"
+
+@inject NavigationManager navigationManager
+@inject IRoleService roleService
+@inject IWebHostEnvironment env
+
+
+<h2>Confirma Exclusão ?</h2>
+<p>Deseja realmente deletar este Perfil com Id: <b> @Id</b></p>
+<br />
+
+<Alerta Exibir="exibirAlerta">
+    <strong>@mensagem</strong>
+</Alerta>
+
+<div class="col-md-8">
+    <table class="table">
+        <tr>
+            <td>Nome</td>
+            <td>@role.Name</td>
+        </tr>
+        <tr>
+            <td>Nome Normalizado</td>
+            <td>@role.NormalizedName</td>
+        </tr>
+        <tr>
+            <td>ConcurrencyStamp</td>
+            <td>@role.ConcurrencyStamp</td>
+        </tr>
+    </table>
+    <div class="form-group">
+        <input type="button" value="Deletar" @onclick="@Delete" class="btn btn-primary" />
+        <input type="button" value="Cancelar" @onclick="@Cancel" class="btn" />
+    </div>
+</div>
+
+
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    Role role = new();
+
+    string mensagem = "";
+    bool exibirAlerta = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            role = await roleService.GetRole(Id);
+        }
+        catch (Exception ex)
+        {
+
+            exibirAlerta = true;
+            if (env.IsDevelopment())
+            {
+                mensagem = "Erro ao acessar os dados ...\n" + ex.StackTrace.ToString();
+            }
+            else
+            {
+                mensagem = "Não foi possível ao acessar os dados do perfil do usuário ...";
+            }
+            StateHasChanged();
+        }
+    }
+
+    private void Cancel()
+    {
+        navigationManager.NavigateTo("roles");
+    }
+
+    private async void Delete()
+    {
+        try
+        {
+            await roleService.DeleteRole(Id);
+            navigationManager.NavigateTo("roles");
+        }
+        catch (Exception ex)
+        {
+            exibirAlerta = true;
+            if (env.IsDevelopment())
+            {
+                mensagem = "Erro ao atualizar os dados ...\n" + ex.StackTrace.ToString();
+            }
+            else
+            {
+                mensagem = "Não foi possível excluir os dados dos perfis do usuário ...";
+            }
+            StateHasChanged();
+        }
+    }
+
+}

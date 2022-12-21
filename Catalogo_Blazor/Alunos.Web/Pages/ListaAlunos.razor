@@ -1,0 +1,22 @@
+﻿@page "/alunos"
+@inherits ListaAlunosBase
+
+<h3>Alunos</h3>
+
+@if (Alunos == null)
+{
+        <img src="/images/basicloader.gif" />
+}
+else
+{
+        <div class="card-deck">
+        @foreach (var aluno in Alunos)
+        {
+                    <div class="card m-0 border-0" style="min-width: 10rem; max-width:20.5%;">
+                        <button type="button" class="btn btn-link">@aluno.Nome</button>
+                        <img class="card-img-top imageAluno" src="@aluno.Foto" />
+                    </div>
+        }
+        </div>
+}
+

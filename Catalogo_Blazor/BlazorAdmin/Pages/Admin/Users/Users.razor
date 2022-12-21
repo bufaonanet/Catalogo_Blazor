@@ -1,0 +1,71 @@
+﻿@page "/users"
+@*@attribute [Authorize]*@
+@inject IUserService userService
+@inject IWebHostEnvironment env
+
+<h2>Usuários</h2>
+
+<Alerta Exibir="exibirAlerta">
+    <h3>@mensagem</h3>
+</Alerta>
+
+@if (users == null)
+{
+    <img src="/images/basicloader.gif" />
+}
+else
+{
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <td>Id</td>
+                <td>Nome</td>
+                <td>Email</td>
+                <td></td>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in users)
+            {
+                <tr>
+                    <td>@user.Id</td>
+                    <td>@user.UserName</td>
+                    <td>@user.Email</td>
+                    <td>
+                        <a class="btn btn-primary" href="/addroleuser/@user.Id">Novo Perfil</a>
+                        <a class="btn btn-primary" href="/deleteuser/@user.Id">Deletar</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<User> users;
+
+    string mensagem = "";
+    bool exibirAlerta = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            users = await userService.GetUsers();
+        }
+        catch (Exception ex)
+        {
+            exibirAlerta = true;
+            if (env.IsDevelopment())
+            {
+                mensagem = "Erro ao acessar os dados... \n" + ex.StackTrace.ToString();
+            }
+            else
+            {
+                mensagem = "Nâo foi possível acessar os dados dos perfiles de usuários" + ex.InnerException;
+            }
+        }
+    }
+
+}
+

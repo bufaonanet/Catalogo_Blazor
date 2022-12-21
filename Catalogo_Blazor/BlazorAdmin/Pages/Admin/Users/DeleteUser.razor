@@ -1,0 +1,71 @@
+﻿@page "/deleteuser/{id:guid}"
+
+@inject IUserService userService
+@inject IWebHostEnvironment env
+@inject NavigationManager navigationManager
+
+<h2>Confirmar Exclusão?</h2>
+<p>Deseja realmente deletar este usuário com Id <b>@Id</b></p>
+
+<Alerta Exibir="exibirErro">
+    <h3>@mensagem</h3>
+</Alerta>
+
+<div class="col-md-4">
+    <table class="table">
+        <tr>
+            <td>Nome</td>
+            <td>@user.UserName.</td>
+        </tr>
+        <tr>
+            <td>Normalizado</td>
+            <td>@user.Email</td>
+        </tr>
+    </table>
+    <div class="form-group">
+        <input type="button" value="Deletar" @onclick="@Delete" class="btn btn-primary" />
+        <input type="button" value="Cancelar" @onclick="@Cancel" class="btn btn-outline-primary" />
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    User user = new();
+
+    string mensagem = "";
+    bool exibirErro = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await userService.GetUser(Id);
+    }
+
+    async Task Delete()
+    {
+        try
+        {
+            await userService.DeleteUser(Id);
+            navigationManager.NavigateTo("users");
+        }
+        catch (Exception ex)
+        {
+            exibirErro = true;
+            if (env.IsDevelopment())
+            {
+                mensagem = "Erro ao deleter... \n" + ex.StackTrace.ToString();
+            }
+            else
+            {
+                mensagem = "Nâo foi possível deletar usuário" + ex.InnerException;
+            }
+        }
+    }
+
+    void Cancel()
+    {
+        navigationManager.NavigateTo("users");
+    }
+
+}
